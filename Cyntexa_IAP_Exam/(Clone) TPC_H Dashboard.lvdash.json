@@ -1,0 +1,2531 @@
+{
+  "datasets": [
+    {
+      "name": "ebab47fe",
+      "displayName": "dim_customer",
+      "config": {
+        "version": "1.1",
+        "source": "tpch_dev.gold.dim_customer",
+        "dimensions": [
+          {
+            "expr": "source.*"
+          }
+        ],
+        "measures": [
+          {
+            "name": "count",
+            "expr": "COUNT(*)",
+            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
+            "displayName": "Count"
+          }
+        ]
+      }
+    },
+    {
+      "name": "9f5ad1c4",
+      "displayName": "dim_geography",
+      "config": {
+        "version": "1.1",
+        "source": "tpch_dev.gold.dim_geography"
+      }
+    },
+    {
+      "name": "1a44b844",
+      "displayName": "dim_product",
+      "config": {
+        "version": "1.1",
+        "source": "tpch_dev.gold.dim_product",
+        "dimensions": [
+          {
+            "expr": "source.*"
+          }
+        ],
+        "measures": [
+          {
+            "name": "count",
+            "expr": "COUNT(*)",
+            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
+            "displayName": "Count"
+          }
+        ]
+      }
+    },
+    {
+      "name": "9ecbc461",
+      "displayName": "dim_supplier",
+      "config": {
+        "version": "1.1",
+        "source": "tpch_dev.gold.dim_supplier",
+        "dimensions": [
+          {
+            "expr": "source.*"
+          }
+        ],
+        "measures": [
+          {
+            "name": "count",
+            "expr": "COUNT(*)",
+            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
+            "displayName": "Count"
+          }
+        ]
+      }
+    },
+    {
+      "name": "66c971e6",
+      "displayName": "fact_sales",
+      "config": {
+        "version": "1.1",
+        "source": "tpch_dev.gold.fact_sales"
+      }
+    },
+    {
+      "name": "0c73ce34",
+      "displayName": "vw_annual_sales_kpis",
+      "config": {
+        "version": "1.1",
+        "source": "tpch_dev.gold.vw_annual_sales_kpis",
+        "dimensions": [
+          {
+            "expr": "source.*"
+          }
+        ],
+        "measures": [
+          {
+            "name": "count",
+            "expr": "COUNT(*)",
+            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
+            "displayName": "Count"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ef08bed5",
+      "displayName": "Sales Performance Metrics Summary",
+      "queryLines": [
+        "SELECT\n",
+        "  SUM(fs.revenue) AS net_revenue,\n",
+        "  COUNT(DISTINCT fs.order_key) AS total_orders,\n",
+        "  COUNT(DISTINCT fs.customer_key) AS active_customers,\n",
+        "  ROUND(SUM(fs.revenue) / COUNT(DISTINCT fs.order_key), 2) AS avg_order_value\n",
+        "FROM\n",
+        "  tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_customer dc\n",
+        "      ON fs.customer_key = dc.customer_key\n",
+        "WHERE\n",
+        "  (\n",
+        "    :date_range.min IS NULL\n",
+        "    OR fs.order_date >= :date_range.min\n",
+        "  )\n",
+        "  AND (\n",
+        "    :date_range.max IS NULL\n",
+        "    OR fs.order_date <= :date_range.max\n",
+        "  )\n",
+        "  AND (\n",
+        "    :region IS NULL\n",
+        "    OR array_contains(:region, dc.region_name)\n",
+        "  )\n",
+        "  AND (\n",
+        "    :market_segment IS NULL\n",
+        "    OR array_contains(:market_segment, dc.market_segment)\n",
+        "  )"
+      ],
+      "parameters": [
+        {
+          "displayName": "Order Date Range",
+          "keyword": "date_range",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Customer Region",
+          "keyword": "region",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Market Segment",
+          "keyword": "market_segment",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        }
+      ]
+    },
+    {
+      "name": "b58b76dd",
+      "displayName": "Monthly Sales Revenue Overview",
+      "queryLines": [
+        "SELECT\n",
+        "  DATE_TRUNC('month', fs.order_date) AS month,\n",
+        "  SUM(fs.revenue) AS monthly_revenue\n",
+        "FROM\n",
+        "  tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_customer dc\n",
+        "      ON fs.customer_key = dc.customer_key\n",
+        "WHERE\n",
+        "  (\n",
+        "    :date_range.min IS NULL\n",
+        "    OR fs.order_date >= :date_range.min\n",
+        "  )\n",
+        "  AND (\n",
+        "    :date_range.max IS NULL\n",
+        "    OR fs.order_date <= :date_range.max\n",
+        "  )\n",
+        "  AND (\n",
+        "    :region IS NULL\n",
+        "    OR array_contains(:region, dc.region_name)\n",
+        "  )\n",
+        "  AND (\n",
+        "    :market_segment IS NULL\n",
+        "    OR array_contains(:market_segment, dc.market_segment)\n",
+        "  )\n",
+        "GROUP BY\n",
+        "  DATE_TRUNC('month', fs.order_date)\n",
+        "ORDER BY\n",
+        "  month"
+      ],
+      "parameters": [
+        {
+          "displayName": "Order Date Range",
+          "keyword": "date_range",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Customer Region",
+          "keyword": "region",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Market Segment",
+          "keyword": "market_segment",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        }
+      ]
+    },
+    {
+      "name": "42791d6f",
+      "displayName": "Annual Revenue Insights 2023 Analysis",
+      "queryLines": [
+        "SELECT\n",
+        "    YEAR(order_date) AS sales_year,\n",
+        "    SUM(revenue) AS annual_revenue,\n",
+        "    LAG(SUM(revenue)) OVER (ORDER BY YEAR(order_date)) AS prev_year_revenue,\n",
+        "    ROUND(\n",
+        "        (SUM(revenue) - LAG(SUM(revenue)) OVER (ORDER BY YEAR(order_date))) /\n",
+        "        LAG(SUM(revenue)) OVER (ORDER BY YEAR(order_date)) * 100, 2\n",
+        "    ) AS yoy_pct_change\n",
+        "FROM tpch_dev.gold.fact_sales\n",
+        "GROUP BY YEAR(order_date)\n",
+        "ORDER BY sales_year"
+      ]
+    },
+    {
+      "name": "4a0dac51",
+      "displayName": "Market Segment Revenue Insights Summary",
+      "queryLines": [
+        "SELECT\n",
+        "  dc.market_segment,\n",
+        "  ROUND(SUM(fs.revenue), 2) AS net_revenue,\n",
+        "  COUNT(DISTINCT fs.order_key) AS order_count,\n",
+        "  COUNT(DISTINCT fs.customer_key) AS customer_count\n",
+        "FROM\n",
+        "  tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_customer dc\n",
+        "      ON fs.customer_key = dc.customer_key\n",
+        "WHERE\n",
+        "  (\n",
+        "    :date_range.min IS NULL\n",
+        "    OR fs.order_date >= :date_range.min\n",
+        "  )\n",
+        "  AND (\n",
+        "    :date_range.max IS NULL\n",
+        "    OR fs.order_date <= :date_range.max\n",
+        "  )\n",
+        "  AND (\n",
+        "    :region IS NULL\n",
+        "    OR array_contains(:region, dc.region_name)\n",
+        "  )\n",
+        "  AND (\n",
+        "    :market_segment IS NULL\n",
+        "    OR array_contains(:market_segment, dc.market_segment)\n",
+        "  )\n",
+        "GROUP BY\n",
+        "  dc.market_segment\n",
+        "ORDER BY\n",
+        "  net_revenue DESC"
+      ],
+      "parameters": [
+        {
+          "displayName": "Order Date Range",
+          "keyword": "date_range",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Customer Region",
+          "keyword": "region",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Market Segment",
+          "keyword": "market_segment",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        }
+      ]
+    },
+    {
+      "name": "934d73f8",
+      "displayName": "Top Ten Customers by Revenue",
+      "queryLines": [
+        "SELECT\n",
+        "  dc.customer_key,\n",
+        "  dc.customer_name,\n",
+        "  dc.market_segment,\n",
+        "  dc.nation_name,\n",
+        "  ROUND(SUM(fs.revenue), 2) AS net_revenue,\n",
+        "  COUNT(DISTINCT fs.order_key) AS order_count\n",
+        "FROM\n",
+        "  tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_customer dc\n",
+        "      ON fs.customer_key = dc.customer_key\n",
+        "WHERE\n",
+        "  (\n",
+        "    :date_range.min IS NULL\n",
+        "    OR fs.order_date >= :date_range.min\n",
+        "  )\n",
+        "  AND (\n",
+        "    :date_range.max IS NULL\n",
+        "    OR fs.order_date <= :date_range.max\n",
+        "  )\n",
+        "  AND (\n",
+        "    :region IS NULL\n",
+        "    OR array_contains(:region, dc.region_name)\n",
+        "  )\n",
+        "  AND (\n",
+        "    :market_segment IS NULL\n",
+        "    OR array_contains(:market_segment, dc.market_segment)\n",
+        "  )\n",
+        "GROUP BY\n",
+        "  dc.customer_key,\n",
+        "  dc.customer_name,\n",
+        "  dc.market_segment,\n",
+        "  dc.nation_name\n",
+        "ORDER BY\n",
+        "  net_revenue DESC\n",
+        "LIMIT 10"
+      ],
+      "parameters": [
+        {
+          "displayName": "Order Date Range",
+          "keyword": "date_range",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Customer Region",
+          "keyword": "region",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Market Segment",
+          "keyword": "market_segment",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        }
+      ]
+    },
+    {
+      "name": "ebede7d6",
+      "displayName": "Top Ten Revenue Contributors",
+      "queryLines": [
+        "WITH top_customers AS (\n",
+        "    SELECT\n",
+        "        dc.customer_key,\n",
+        "        dc.customer_name,\n",
+        "        SUM(fs.revenue) AS customer_revenue\n",
+        "    FROM tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_customer dc ON fs.customer_key = dc.customer_key\n",
+        "    GROUP BY dc.customer_key, dc.customer_name\n",
+        "    ORDER BY customer_revenue DESC\n",
+        "    LIMIT 10\n",
+        "),\n",
+        "total_revenue AS (\n",
+        "    SELECT SUM(revenue) AS total FROM tpch_dev.gold.fact_sales\n",
+        ")\n",
+        "SELECT\n",
+        "    tc.customer_key,\n",
+        "    tc.customer_name,\n",
+        "    ROUND(tc.customer_revenue, 2) AS customer_revenue,\n",
+        "    ROUND(tr.total, 2) AS total_revenue,\n",
+        "    ROUND(tc.customer_revenue / tr.total * 100, 4) AS revenue_share_pct\n",
+        "FROM top_customers tc\n",
+        "CROSS JOIN total_revenue tr\n",
+        "ORDER BY tc.customer_revenue DESC"
+      ]
+    },
+    {
+      "name": "a2bd78aa",
+      "displayName": "Top Ten Products by Revenue Summary",
+      "queryLines": [
+        "SELECT\n",
+        "  dp.product_key,\n",
+        "  dp.product_name,\n",
+        "  dp.brand,\n",
+        "  dp.product_type,\n",
+        "  ROUND(SUM(fs.revenue), 2) AS net_revenue,\n",
+        "  ROUND(SUM(fs.quantity), 2) AS total_quantity\n",
+        "FROM\n",
+        "  tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_product dp\n",
+        "      ON fs.product_key = dp.product_key\n",
+        "    JOIN tpch_dev.gold.dim_customer dc\n",
+        "      ON fs.customer_key = dc.customer_key\n",
+        "WHERE\n",
+        "  (\n",
+        "    :date_range.min IS NULL\n",
+        "    OR fs.order_date >= :date_range.min\n",
+        "  )\n",
+        "  AND (\n",
+        "    :date_range.max IS NULL\n",
+        "    OR fs.order_date <= :date_range.max\n",
+        "  )\n",
+        "  AND (\n",
+        "    :region IS NULL\n",
+        "    OR array_contains(:region, dc.region_name)\n",
+        "  )\n",
+        "  AND (\n",
+        "    :market_segment IS NULL\n",
+        "    OR array_contains(:market_segment, dc.market_segment)\n",
+        "  )\n",
+        "GROUP BY\n",
+        "  dp.product_key,\n",
+        "  dp.product_name,\n",
+        "  dp.brand,\n",
+        "  dp.product_type\n",
+        "ORDER BY\n",
+        "  net_revenue DESC\n",
+        "LIMIT 10"
+      ],
+      "parameters": [
+        {
+          "displayName": "Order Date Range",
+          "keyword": "date_range",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Customer Region",
+          "keyword": "region",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Market Segment",
+          "keyword": "market_segment",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        }
+      ]
+    },
+    {
+      "name": "739c0bfd",
+      "displayName": "Bottom Ten Products by Revenue",
+      "queryLines": [
+        "SELECT\n",
+        "  dp.product_key,\n",
+        "  dp.product_name,\n",
+        "  dp.brand,\n",
+        "  dp.product_type,\n",
+        "  ROUND(SUM(fs.revenue), 2) AS net_revenue,\n",
+        "  ROUND(SUM(fs.quantity), 2) AS total_quantity\n",
+        "FROM\n",
+        "  tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_product dp\n",
+        "      ON fs.product_key = dp.product_key\n",
+        "    JOIN tpch_dev.gold.dim_customer dc\n",
+        "      ON fs.customer_key = dc.customer_key\n",
+        "WHERE\n",
+        "  (\n",
+        "    :date_range.min IS NULL\n",
+        "    OR fs.order_date >= :date_range.min\n",
+        "  )\n",
+        "  AND (\n",
+        "    :date_range.max IS NULL\n",
+        "    OR fs.order_date <= :date_range.max\n",
+        "  )\n",
+        "  AND (\n",
+        "    :region IS NULL\n",
+        "    OR array_contains(:region, dc.region_name)\n",
+        "  )\n",
+        "  AND (\n",
+        "    :market_segment IS NULL\n",
+        "    OR array_contains(:market_segment, dc.market_segment)\n",
+        "  )\n",
+        "GROUP BY\n",
+        "  dp.product_key,\n",
+        "  dp.product_name,\n",
+        "  dp.brand,\n",
+        "  dp.product_type\n",
+        "ORDER BY\n",
+        "  net_revenue ASC\n",
+        "LIMIT 10"
+      ],
+      "parameters": [
+        {
+          "displayName": "Order Date Range",
+          "keyword": "date_range",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Customer Region",
+          "keyword": "region",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Market Segment",
+          "keyword": "market_segment",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        }
+      ]
+    },
+    {
+      "name": "b75590ae",
+      "displayName": "Revenue Insights by Product Type Analysis",
+      "queryLines": [
+        "SELECT\n",
+        "    dp.product_type,\n",
+        "    ROUND(SUM(fs.revenue), 2) AS net_revenue,\n",
+        "    COUNT(DISTINCT dp.product_key) AS product_count,\n",
+        "    ROUND(SUM(fs.quantity), 2) AS total_quantity\n",
+        "FROM tpch_dev.gold.fact_sales fs\n",
+        "JOIN tpch_dev.gold.dim_product dp ON fs.product_key = dp.product_key\n",
+        "GROUP BY dp.product_type\n",
+        "ORDER BY net_revenue DESC"
+      ]
+    },
+    {
+      "name": "f06b972d",
+      "displayName": "Top Suppliers by Net Revenue Insights",
+      "queryLines": [
+        "SELECT\n",
+        "    ds.supplier_key,\n",
+        "    ds.supplier_name,\n",
+        "    ds.nation_name,\n",
+        "    ds.region_name,\n",
+        "    ROUND(SUM(fs.revenue), 2) AS net_revenue,\n",
+        "    COUNT(DISTINCT fs.order_key) AS order_count\n",
+        "FROM tpch_dev.gold.fact_sales fs\n",
+        "JOIN tpch_dev.gold.dim_supplier ds ON fs.supplier_key = ds.supplier_key\n",
+        "GROUP BY ds.supplier_key, ds.supplier_name, ds.nation_name, ds.region_name\n",
+        "ORDER BY net_revenue DESC\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "4900f437",
+      "displayName": "Top Suppliers Revenue and Share Analysis",
+      "queryLines": [
+        "WITH top_suppliers AS (\n",
+        "  SELECT\n",
+        "    ds.supplier_key,\n",
+        "    ds.supplier_name,\n",
+        "    SUM(fs.revenue) AS supplier_revenue\n",
+        "  FROM\n",
+        "    tpch_dev.gold.fact_sales fs\n",
+        "      JOIN tpch_dev.gold.dim_supplier ds\n",
+        "        ON fs.supplier_key = ds.supplier_key\n",
+        "      JOIN tpch_dev.gold.dim_customer dc\n",
+        "        ON fs.customer_key = dc.customer_key\n",
+        "  WHERE\n",
+        "    (\n",
+        "      :date_range.min IS NULL\n",
+        "      OR fs.order_date >= :date_range.min\n",
+        "    )\n",
+        "    AND (\n",
+        "      :date_range.max IS NULL\n",
+        "      OR fs.order_date <= :date_range.max\n",
+        "    )\n",
+        "    AND (\n",
+        "      :region IS NULL\n",
+        "      OR array_contains(:region, dc.region_name)\n",
+        "    )\n",
+        "    AND (\n",
+        "      :market_segment IS NULL\n",
+        "      OR array_contains(:market_segment, dc.market_segment)\n",
+        "    )\n",
+        "  GROUP BY\n",
+        "    ds.supplier_key,\n",
+        "    ds.supplier_name\n",
+        "  ORDER BY\n",
+        "    supplier_revenue DESC\n",
+        "  LIMIT 10\n",
+        "),\n",
+        "total_revenue AS (\n",
+        "  SELECT\n",
+        "    SUM(fs.revenue) AS total\n",
+        "  FROM\n",
+        "    tpch_dev.gold.fact_sales fs\n",
+        "      JOIN tpch_dev.gold.dim_customer dc\n",
+        "        ON fs.customer_key = dc.customer_key\n",
+        "  WHERE\n",
+        "    (\n",
+        "      :date_range.min IS NULL\n",
+        "      OR fs.order_date >= :date_range.min\n",
+        "    )\n",
+        "    AND (\n",
+        "      :date_range.max IS NULL\n",
+        "      OR fs.order_date <= :date_range.max\n",
+        "    )\n",
+        "    AND (\n",
+        "      :region IS NULL\n",
+        "      OR array_contains(:region, dc.region_name)\n",
+        "    )\n",
+        "    AND (\n",
+        "      :market_segment IS NULL\n",
+        "      OR array_contains(:market_segment, dc.market_segment)\n",
+        "    )\n",
+        ")\n",
+        "SELECT\n",
+        "  tc.supplier_key,\n",
+        "  tc.supplier_name,\n",
+        "  ROUND(tc.supplier_revenue, 2) AS supplier_revenue,\n",
+        "  ROUND(tr.total, 2) AS total_revenue,\n",
+        "  ROUND(tc.supplier_revenue / tr.total * 100, 4) AS revenue_share_pct\n",
+        "FROM\n",
+        "  top_suppliers tc CROSS JOIN total_revenue tr\n",
+        "ORDER BY\n",
+        "  tc.supplier_revenue DESC"
+      ],
+      "parameters": [
+        {
+          "displayName": "Order Date Range",
+          "keyword": "date_range",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Customer Region",
+          "keyword": "region",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Market Segment",
+          "keyword": "market_segment",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        }
+      ]
+    },
+    {
+      "name": "0eab07f7",
+      "displayName": "Regional Revenue Insights",
+      "queryLines": [
+        "SELECT\n",
+        "    dc.region_name,\n",
+        "    ROUND(SUM(fs.revenue), 2) AS net_revenue,\n",
+        "    COUNT(DISTINCT fs.customer_key) AS customer_count,\n",
+        "    COUNT(DISTINCT fs.order_key) AS order_count\n",
+        "FROM tpch_dev.gold.fact_sales fs\n",
+        "JOIN tpch_dev.gold.dim_customer dc ON fs.customer_key = dc.customer_key\n",
+        "GROUP BY dc.region_name\n",
+        "ORDER BY net_revenue DESC"
+      ]
+    },
+    {
+      "name": "3dc944d3",
+      "displayName": "Revenue Insights by Nation and Region",
+      "queryLines": [
+        "SELECT\n",
+        "  dc.nation_name,\n",
+        "  dc.region_name,\n",
+        "  ROUND(SUM(fs.revenue), 2) AS net_revenue,\n",
+        "  COUNT(DISTINCT fs.customer_key) AS customer_count,\n",
+        "  COUNT(DISTINCT fs.order_key) AS order_count\n",
+        "FROM\n",
+        "  tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_customer dc\n",
+        "      ON fs.customer_key = dc.customer_key\n",
+        "WHERE\n",
+        "  (\n",
+        "    :date_range.min IS NULL\n",
+        "    OR fs.order_date >= :date_range.min\n",
+        "  )\n",
+        "  AND (\n",
+        "    :date_range.max IS NULL\n",
+        "    OR fs.order_date <= :date_range.max\n",
+        "  )\n",
+        "  AND (\n",
+        "    :region IS NULL\n",
+        "    OR array_contains(:region, dc.region_name)\n",
+        "  )\n",
+        "  AND (\n",
+        "    :market_segment IS NULL\n",
+        "    OR array_contains(:market_segment, dc.market_segment)\n",
+        "  )\n",
+        "GROUP BY\n",
+        "  dc.nation_name,\n",
+        "  dc.region_name\n",
+        "ORDER BY\n",
+        "  net_revenue DESC"
+      ],
+      "parameters": [
+        {
+          "displayName": "Order Date Range",
+          "keyword": "date_range",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Customer Region",
+          "keyword": "region",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Market Segment",
+          "keyword": "market_segment",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        }
+      ]
+    },
+    {
+      "name": "dbddc2dc",
+      "displayName": "Sales Revenue and Quantity by Return Flag Analysis",
+      "queryLines": [
+        "SELECT\n",
+        "    fs.return_flag,\n",
+        "    ROUND(SUM(fs.revenue), 2) AS net_revenue,\n",
+        "    ROUND(SUM(fs.quantity), 2) AS total_quantity,\n",
+        "    COUNT(*) AS line_count,\n",
+        "    ROUND(SUM(fs.revenue) / (SELECT SUM(revenue) FROM tpch_dev.gold.fact_sales) * 100, 4) AS revenue_share_pct\n",
+        "FROM tpch_dev.gold.fact_sales fs\n",
+        "GROUP BY fs.return_flag\n",
+        "ORDER BY net_revenue DESC"
+      ]
+    },
+    {
+      "name": "ceabb511",
+      "displayName": "Discount Analysis by Market Segment",
+      "queryLines": [
+        "SELECT\n",
+        "  dc.market_segment,\n",
+        "  ROUND(AVG(fs.discount_rate) * 100, 4) AS avg_discount_pct,\n",
+        "  ROUND(SUM(fs.revenue), 2) AS net_revenue,\n",
+        "  ROUND(SUM(fs.discount_amount), 2) AS total_discount_amount,\n",
+        "  COUNT(*) AS line_count\n",
+        "FROM\n",
+        "  tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_customer dc\n",
+        "      ON fs.customer_key = dc.customer_key\n",
+        "WHERE\n",
+        "  (\n",
+        "    :date_range.min IS NULL\n",
+        "    OR fs.order_date >= :date_range.min\n",
+        "  )\n",
+        "  AND (\n",
+        "    :date_range.max IS NULL\n",
+        "    OR fs.order_date <= :date_range.max\n",
+        "  )\n",
+        "  AND (\n",
+        "    :region IS NULL\n",
+        "    OR array_contains(:region, dc.region_name)\n",
+        "  )\n",
+        "  AND (\n",
+        "    :market_segment IS NULL\n",
+        "    OR array_contains(:market_segment, dc.market_segment)\n",
+        "  )\n",
+        "GROUP BY\n",
+        "  dc.market_segment\n",
+        "ORDER BY\n",
+        "  avg_discount_pct DESC"
+      ],
+      "parameters": [
+        {
+          "displayName": "Order Date Range",
+          "keyword": "date_range",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Customer Region",
+          "keyword": "region",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Market Segment",
+          "keyword": "market_segment",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        }
+      ]
+    },
+    {
+      "name": "43a64610",
+      "displayName": "Shipping Performance Analysis",
+      "queryLines": [
+        "SELECT\n",
+        "  fs.ship_mode,\n",
+        "  ROUND(AVG(DATEDIFF(fs.receipt_date, fs.ship_date)), 2) AS avg_ship_to_receipt_days,\n",
+        "  ROUND(AVG(DATEDIFF(fs.ship_date, fs.order_date)), 2) AS avg_order_to_ship_days,\n",
+        "  COUNT(*) AS line_count\n",
+        "FROM\n",
+        "  tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_customer dc\n",
+        "      ON fs.customer_key = dc.customer_key\n",
+        "WHERE\n",
+        "  (\n",
+        "    :date_range.min IS NULL\n",
+        "    OR fs.order_date >= :date_range.min\n",
+        "  )\n",
+        "  AND (\n",
+        "    :date_range.max IS NULL\n",
+        "    OR fs.order_date <= :date_range.max\n",
+        "  )\n",
+        "  AND (\n",
+        "    :region IS NULL\n",
+        "    OR array_contains(:region, dc.region_name)\n",
+        "  )\n",
+        "  AND (\n",
+        "    :market_segment IS NULL\n",
+        "    OR array_contains(:market_segment, dc.market_segment)\n",
+        "  )\n",
+        "GROUP BY\n",
+        "  fs.ship_mode\n",
+        "ORDER BY\n",
+        "  avg_ship_to_receipt_days DESC"
+      ],
+      "parameters": [
+        {
+          "displayName": "Order Date Range",
+          "keyword": "date_range",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Customer Region",
+          "keyword": "region",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        },
+        {
+          "displayName": "Market Segment",
+          "keyword": "market_segment",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {}
+        }
+      ]
+    },
+    {
+      "name": "03babc69",
+      "displayName": "Order Priority Analysis and Revenue Insights",
+      "queryLines": [
+        "SELECT\n",
+        "    fs.order_priority,\n",
+        "    COUNT(DISTINCT fs.order_key) AS order_count,\n",
+        "    ROUND(SUM(fs.revenue), 2) AS net_revenue,\n",
+        "    ROUND(SUM(fs.revenue) / COUNT(DISTINCT fs.order_key), 2) AS avg_order_value\n",
+        "FROM tpch_dev.gold.fact_sales fs\n",
+        "GROUP BY fs.order_priority\n",
+        "ORDER BY net_revenue DESC"
+      ]
+    },
+    {
+      "name": "1d847533",
+      "displayName": "Monthly Sales Performance Overview",
+      "queryLines": [
+        "SELECT\n",
+        "    DATE_TRUNC('month', fs.order_date) AS month,\n",
+        "    fs.order_status,\n",
+        "    COUNT(DISTINCT fs.order_key) AS order_count,\n",
+        "    ROUND(SUM(fs.revenue), 2) AS net_revenue\n",
+        "FROM tpch_dev.gold.fact_sales fs\n",
+        "GROUP BY DATE_TRUNC('month', fs.order_date), fs.order_status\n",
+        "ORDER BY month, fs.order_status"
+      ]
+    },
+    {
+      "name": "c22517d2",
+      "displayName": "Market Segment Revenue Insights",
+      "queryLines": [
+        "WITH product_segment_revenue AS (\n",
+        "    SELECT\n",
+        "        dc.market_segment,\n",
+        "        dp.product_key,\n",
+        "        dp.product_name,\n",
+        "        dp.brand,\n",
+        "        dp.product_type,\n",
+        "        ROUND(SUM(fs.revenue), 2) AS net_revenue\n",
+        "    FROM tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_customer dc ON fs.customer_key = dc.customer_key\n",
+        "    JOIN tpch_dev.gold.dim_product dp ON fs.product_key = dp.product_key\n",
+        "    GROUP BY dc.market_segment, dp.product_key, dp.product_name, dp.brand, dp.product_type\n",
+        ")\n",
+        "SELECT\n",
+        "    market_segment,\n",
+        "    product_key,\n",
+        "    product_name,\n",
+        "    brand,\n",
+        "    product_type,\n",
+        "    net_revenue,\n",
+        "    RANK() OVER (PARTITION BY market_segment ORDER BY net_revenue DESC) AS revenue_rank\n",
+        "FROM product_segment_revenue\n",
+        "ORDER BY market_segment, revenue_rank"
+      ]
+    },
+    {
+      "name": "81cae226",
+      "displayName": "Regional Revenue Insights on Customers and Suppliers",
+      "queryLines": [
+        "WITH customer_region_revenue AS (\n",
+        "    SELECT\n",
+        "        dc.region_name AS customer_region,\n",
+        "        ROUND(SUM(fs.revenue), 2) AS customer_region_revenue\n",
+        "    FROM tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_customer dc ON fs.customer_key = dc.customer_key\n",
+        "    GROUP BY dc.region_name\n",
+        "),\n",
+        "supplier_region_revenue AS (\n",
+        "    SELECT\n",
+        "        ds.region_name AS supplier_region,\n",
+        "        ROUND(SUM(fs.revenue), 2) AS supplier_region_revenue\n",
+        "    FROM tpch_dev.gold.fact_sales fs\n",
+        "    JOIN tpch_dev.gold.dim_supplier ds ON fs.supplier_key = ds.supplier_key\n",
+        "    GROUP BY ds.region_name\n",
+        ")\n",
+        "SELECT\n",
+        "    COALESCE(cr.customer_region, sr.supplier_region) AS region_name,\n",
+        "    ROUND(COALESCE(cr.customer_region_revenue, 0), 2) AS customer_region_revenue,\n",
+        "    ROUND(COALESCE(sr.supplier_region_revenue, 0), 2) AS supplier_region_revenue,\n",
+        "    ROUND(COALESCE(cr.customer_region_revenue, 0) - COALESCE(sr.supplier_region_revenue, 0), 2) AS revenue_difference,\n",
+        "    ROUND(\n",
+        "        COALESCE(cr.customer_region_revenue, 0) /\n",
+        "        NULLIF((SELECT SUM(revenue) FROM tpch_dev.gold.fact_sales), 0) * 100, 4\n",
+        "    ) AS customer_region_share_pct,\n",
+        "    ROUND(\n",
+        "        COALESCE(sr.supplier_region_revenue, 0) /\n",
+        "        NULLIF((SELECT SUM(revenue) FROM tpch_dev.gold.fact_sales), 0) * 100, 4\n",
+        "    ) AS supplier_region_share_pct\n",
+        "FROM customer_region_revenue cr\n",
+        "FULL OUTER JOIN supplier_region_revenue sr\n",
+        "    ON cr.customer_region = sr.supplier_region\n",
+        "ORDER BY region_name"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "b694b4bc",
+      "displayName": "Executive Overview",
+      "layout": [
+        {
+          "widget": {
+            "name": "kpi_net_revenue",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ef08bed5",
+                  "fields": [
+                    {
+                      "name": "sum(net_revenue)",
+                      "expression": "SUM(`net_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Net Revenue"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(net_revenue)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_total_orders",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ef08bed5",
+                  "fields": [
+                    {
+                      "name": "sum(total_orders)",
+                      "expression": "SUM(`total_orders`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Total Orders"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_orders)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_active_customers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ef08bed5",
+                  "fields": [
+                    {
+                      "name": "sum(active_customers)",
+                      "expression": "SUM(`active_customers`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Active Customers"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(active_customers)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_avg_order_value",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ef08bed5",
+                  "fields": [
+                    {
+                      "name": "sum(avg_order_value)",
+                      "expression": "SUM(`avg_order_value`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Avg Order Value"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(avg_order_value)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "revenue_trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "b58b76dd",
+                  "fields": [
+                    {
+                      "name": "month",
+                      "expression": "`month`"
+                    },
+                    {
+                      "name": "sum(monthly_revenue)",
+                      "expression": "SUM(`monthly_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Monthly Revenue Trend"
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "month",
+                  "displayName": "month",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(monthly_revenue)",
+                  "displayName": "monthly_revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "revenue_by_region",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "3dc944d3",
+                  "fields": [
+                    {
+                      "name": "region_name",
+                      "expression": "`region_name`"
+                    },
+                    {
+                      "name": "sum(net_revenue)",
+                      "expression": "SUM(`net_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by Customer Region"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "region_name",
+                  "displayName": "region_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(net_revenue)",
+                  "displayName": "net_revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "region_name",
+                  "displayName": "region_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "top_customers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "934d73f8",
+                  "fields": [
+                    {
+                      "name": "customer_name",
+                      "expression": "`customer_name`"
+                    },
+                    {
+                      "name": "sum(net_revenue)",
+                      "expression": "SUM(`net_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Top 10 Customers by Revenue"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "customer_name",
+                  "displayName": "customer_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(net_revenue)",
+                  "displayName": "net_revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "customer_name",
+                  "displayName": "customer_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 6,
+            "width": 6,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "customer_product",
+      "displayName": "Customer & Product Analytics",
+      "layout": [
+        {
+          "widget": {
+            "name": "revenue_by_segment",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "4a0dac51",
+                  "fields": [
+                    {
+                      "name": "market_segment",
+                      "expression": "`market_segment`"
+                    },
+                    {
+                      "name": "sum(net_revenue)",
+                      "expression": "SUM(`net_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by Market Segment"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "market_segment",
+                  "displayName": "market_segment",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(net_revenue)",
+                  "displayName": "net_revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "market_segment",
+                  "displayName": "market_segment",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "discount_by_segment",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ceabb511",
+                  "fields": [
+                    {
+                      "name": "market_segment",
+                      "expression": "`market_segment`"
+                    },
+                    {
+                      "name": "avg(avg_discount_pct)",
+                      "expression": "AVG(`avg_discount_pct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Average Discount % by Market Segment"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "market_segment",
+                  "displayName": "market_segment",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(avg_discount_pct)",
+                  "displayName": "avg_discount_pct",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "market_segment",
+                  "displayName": "market_segment",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "top_products",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a2bd78aa",
+                  "fields": [
+                    {
+                      "name": "product_name",
+                      "expression": "`product_name`"
+                    },
+                    {
+                      "name": "sum(net_revenue)",
+                      "expression": "SUM(`net_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Top 10 Products by Revenue"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "product_name",
+                  "displayName": "product_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(net_revenue)",
+                  "displayName": "net_revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "product_name",
+                  "displayName": "product_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "bottom_products",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "739c0bfd",
+                  "fields": [
+                    {
+                      "name": "product_name",
+                      "expression": "`product_name`"
+                    },
+                    {
+                      "name": "sum(net_revenue)",
+                      "expression": "SUM(`net_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Bottom 10 Products by Revenue"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "product_name",
+                  "displayName": "product_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(net_revenue)",
+                  "displayName": "net_revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "product_name",
+                  "displayName": "product_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 5,
+            "width": 6,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "supply_chain",
+      "displayName": "Supply Chain Analytics",
+      "layout": [
+        {
+          "widget": {
+            "name": "top_suppliers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "4900f437",
+                  "fields": [
+                    {
+                      "name": "supplier_name",
+                      "expression": "`supplier_name`"
+                    },
+                    {
+                      "name": "sum(supplier_revenue)",
+                      "expression": "SUM(`supplier_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Top 10 Suppliers by Revenue"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "supplier_name",
+                  "displayName": "supplier_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(supplier_revenue)",
+                  "displayName": "supplier_revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "supplier_name",
+                  "displayName": "supplier_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "supplier_concentration",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "4900f437",
+                  "fields": [
+                    {
+                      "name": "sum(revenue_share_pct)",
+                      "expression": "SUM(`revenue_share_pct`)"
+                    },
+                    {
+                      "name": "supplier_name",
+                      "expression": "`supplier_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Supplier Revenue Concentration"
+              },
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(revenue_share_pct)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "revenue_share_pct"
+                },
+                "color": {
+                  "fieldName": "supplier_name",
+                  "displayName": "supplier_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "revenue_by_nation",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "3dc944d3",
+                  "fields": [
+                    {
+                      "name": "nation_name",
+                      "expression": "`nation_name`"
+                    },
+                    {
+                      "name": "sum(net_revenue)",
+                      "expression": "SUM(`net_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by Customer Nation"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "nation_name",
+                  "displayName": "nation_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(net_revenue)",
+                  "displayName": "net_revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "nation_name",
+                  "displayName": "nation_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "ship_time_by_mode",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "43a64610",
+                  "fields": [
+                    {
+                      "name": "ship_mode",
+                      "expression": "`ship_mode`"
+                    },
+                    {
+                      "name": "avg(avg_ship_to_receipt_days)",
+                      "expression": "AVG(`avg_ship_to_receipt_days`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Avg Ship-to-Receipt Days by Mode"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "ship_mode",
+                  "displayName": "ship_mode",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(avg_ship_to_receipt_days)",
+                  "displayName": "avg_ship_to_receipt_days",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "ship_mode",
+                  "displayName": "ship_mode",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 5,
+            "width": 6,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "global_filters",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "order_date_filter",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce022d1914c5acfd8cefc4a82ece_date_range",
+                "query": {
+                  "datasetName": "ef08bed5",
+                  "parameters": [
+                    {
+                      "name": "date_range",
+                      "keyword": "date_range"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0240fc18cdb52693565ea97062_date_range",
+                "query": {
+                  "datasetName": "b58b76dd",
+                  "parameters": [
+                    {
+                      "name": "date_range",
+                      "keyword": "date_range"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02af161c4d872ff01c2ced38c3_date_range",
+                "query": {
+                  "datasetName": "3dc944d3",
+                  "parameters": [
+                    {
+                      "name": "date_range",
+                      "keyword": "date_range"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0262931f0189afe5b35c35a23a_date_range",
+                "query": {
+                  "datasetName": "934d73f8",
+                  "parameters": [
+                    {
+                      "name": "date_range",
+                      "keyword": "date_range"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce025a0d1ac190b3f8ec9867c4e6_date_range",
+                "query": {
+                  "datasetName": "4a0dac51",
+                  "parameters": [
+                    {
+                      "name": "date_range",
+                      "keyword": "date_range"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0276591ebc900c92da1263665e_date_range",
+                "query": {
+                  "datasetName": "a2bd78aa",
+                  "parameters": [
+                    {
+                      "name": "date_range",
+                      "keyword": "date_range"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce027ee514e09fbd4368539862e5_date_range",
+                "query": {
+                  "datasetName": "739c0bfd",
+                  "parameters": [
+                    {
+                      "name": "date_range",
+                      "keyword": "date_range"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02c2da138ebcd0218f8214524d_date_range",
+                "query": {
+                  "datasetName": "ceabb511",
+                  "parameters": [
+                    {
+                      "name": "date_range",
+                      "keyword": "date_range"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce029ce518efb09b40cdeb23fb76_date_range",
+                "query": {
+                  "datasetName": "4900f437",
+                  "parameters": [
+                    {
+                      "name": "date_range",
+                      "keyword": "date_range"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02ca9f152e84b02c013a9ab3b0_date_range",
+                "query": {
+                  "datasetName": "43a64610",
+                  "parameters": [
+                    {
+                      "name": "date_range",
+                      "keyword": "date_range"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Order Date Range"
+              },
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "date_range",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce022d1914c5acfd8cefc4a82ece_date_range"
+                  },
+                  {
+                    "parameterName": "date_range",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0240fc18cdb52693565ea97062_date_range"
+                  },
+                  {
+                    "parameterName": "date_range",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02af161c4d872ff01c2ced38c3_date_range"
+                  },
+                  {
+                    "parameterName": "date_range",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0262931f0189afe5b35c35a23a_date_range"
+                  },
+                  {
+                    "parameterName": "date_range",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce025a0d1ac190b3f8ec9867c4e6_date_range"
+                  },
+                  {
+                    "parameterName": "date_range",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0276591ebc900c92da1263665e_date_range"
+                  },
+                  {
+                    "parameterName": "date_range",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce027ee514e09fbd4368539862e5_date_range"
+                  },
+                  {
+                    "parameterName": "date_range",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02c2da138ebcd0218f8214524d_date_range"
+                  },
+                  {
+                    "parameterName": "date_range",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce029ce518efb09b40cdeb23fb76_date_range"
+                  },
+                  {
+                    "parameterName": "date_range",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02ca9f152e84b02c013a9ab3b0_date_range"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "region_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1cdfbe14d195b9ba353b864ae064f_region_name",
+                "query": {
+                  "datasetName": "ebab47fe",
+                  "fields": [
+                    {
+                      "name": "region_name",
+                      "expression": "`region_name`"
+                    },
+                    {
+                      "name": "region_name_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce022d1914c5acfd8cefc4a82ece_region",
+                "query": {
+                  "datasetName": "ef08bed5",
+                  "parameters": [
+                    {
+                      "name": "region",
+                      "keyword": "region"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0240fc18cdb52693565ea97062_region",
+                "query": {
+                  "datasetName": "b58b76dd",
+                  "parameters": [
+                    {
+                      "name": "region",
+                      "keyword": "region"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02af161c4d872ff01c2ced38c3_region",
+                "query": {
+                  "datasetName": "3dc944d3",
+                  "parameters": [
+                    {
+                      "name": "region",
+                      "keyword": "region"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0262931f0189afe5b35c35a23a_region",
+                "query": {
+                  "datasetName": "934d73f8",
+                  "parameters": [
+                    {
+                      "name": "region",
+                      "keyword": "region"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce025a0d1ac190b3f8ec9867c4e6_region",
+                "query": {
+                  "datasetName": "4a0dac51",
+                  "parameters": [
+                    {
+                      "name": "region",
+                      "keyword": "region"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0276591ebc900c92da1263665e_region",
+                "query": {
+                  "datasetName": "a2bd78aa",
+                  "parameters": [
+                    {
+                      "name": "region",
+                      "keyword": "region"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce027ee514e09fbd4368539862e5_region",
+                "query": {
+                  "datasetName": "739c0bfd",
+                  "parameters": [
+                    {
+                      "name": "region",
+                      "keyword": "region"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02c2da138ebcd0218f8214524d_region",
+                "query": {
+                  "datasetName": "ceabb511",
+                  "parameters": [
+                    {
+                      "name": "region",
+                      "keyword": "region"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce029ce518efb09b40cdeb23fb76_region",
+                "query": {
+                  "datasetName": "4900f437",
+                  "parameters": [
+                    {
+                      "name": "region",
+                      "keyword": "region"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02ca9f152e84b02c013a9ab3b0_region",
+                "query": {
+                  "datasetName": "43a64610",
+                  "parameters": [
+                    {
+                      "name": "region",
+                      "keyword": "region"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Customer Region"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "region_name",
+                    "queryName": "dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1cdfbe14d195b9ba353b864ae064f_region_name"
+                  },
+                  {
+                    "parameterName": "region",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce022d1914c5acfd8cefc4a82ece_region"
+                  },
+                  {
+                    "parameterName": "region",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0240fc18cdb52693565ea97062_region"
+                  },
+                  {
+                    "parameterName": "region",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02af161c4d872ff01c2ced38c3_region"
+                  },
+                  {
+                    "parameterName": "region",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0262931f0189afe5b35c35a23a_region"
+                  },
+                  {
+                    "parameterName": "region",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce025a0d1ac190b3f8ec9867c4e6_region"
+                  },
+                  {
+                    "parameterName": "region",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0276591ebc900c92da1263665e_region"
+                  },
+                  {
+                    "parameterName": "region",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce027ee514e09fbd4368539862e5_region"
+                  },
+                  {
+                    "parameterName": "region",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02c2da138ebcd0218f8214524d_region"
+                  },
+                  {
+                    "parameterName": "region",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce029ce518efb09b40cdeb23fb76_region"
+                  },
+                  {
+                    "parameterName": "region",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02ca9f152e84b02c013a9ab3b0_region"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "segment_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1cdfbe14d195b9ba353b864ae064f_market_segment",
+                "query": {
+                  "datasetName": "ebab47fe",
+                  "fields": [
+                    {
+                      "name": "market_segment",
+                      "expression": "`market_segment`"
+                    },
+                    {
+                      "name": "market_segment_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce022d1914c5acfd8cefc4a82ece_market_segment",
+                "query": {
+                  "datasetName": "ef08bed5",
+                  "parameters": [
+                    {
+                      "name": "market_segment",
+                      "keyword": "market_segment"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0240fc18cdb52693565ea97062_market_segment",
+                "query": {
+                  "datasetName": "b58b76dd",
+                  "parameters": [
+                    {
+                      "name": "market_segment",
+                      "keyword": "market_segment"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02af161c4d872ff01c2ced38c3_market_segment",
+                "query": {
+                  "datasetName": "3dc944d3",
+                  "parameters": [
+                    {
+                      "name": "market_segment",
+                      "keyword": "market_segment"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0262931f0189afe5b35c35a23a_market_segment",
+                "query": {
+                  "datasetName": "934d73f8",
+                  "parameters": [
+                    {
+                      "name": "market_segment",
+                      "keyword": "market_segment"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce025a0d1ac190b3f8ec9867c4e6_market_segment",
+                "query": {
+                  "datasetName": "4a0dac51",
+                  "parameters": [
+                    {
+                      "name": "market_segment",
+                      "keyword": "market_segment"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0276591ebc900c92da1263665e_market_segment",
+                "query": {
+                  "datasetName": "a2bd78aa",
+                  "parameters": [
+                    {
+                      "name": "market_segment",
+                      "keyword": "market_segment"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce027ee514e09fbd4368539862e5_market_segment",
+                "query": {
+                  "datasetName": "739c0bfd",
+                  "parameters": [
+                    {
+                      "name": "market_segment",
+                      "keyword": "market_segment"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02c2da138ebcd0218f8214524d_market_segment",
+                "query": {
+                  "datasetName": "ceabb511",
+                  "parameters": [
+                    {
+                      "name": "market_segment",
+                      "keyword": "market_segment"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce029ce518efb09b40cdeb23fb76_market_segment",
+                "query": {
+                  "datasetName": "4900f437",
+                  "parameters": [
+                    {
+                      "name": "market_segment",
+                      "keyword": "market_segment"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02ca9f152e84b02c013a9ab3b0_market_segment",
+                "query": {
+                  "datasetName": "43a64610",
+                  "parameters": [
+                    {
+                      "name": "market_segment",
+                      "keyword": "market_segment"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Market Segment"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "market_segment",
+                    "queryName": "dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1cdfbe14d195b9ba353b864ae064f_market_segment"
+                  },
+                  {
+                    "parameterName": "market_segment",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce022d1914c5acfd8cefc4a82ece_market_segment"
+                  },
+                  {
+                    "parameterName": "market_segment",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0240fc18cdb52693565ea97062_market_segment"
+                  },
+                  {
+                    "parameterName": "market_segment",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02af161c4d872ff01c2ced38c3_market_segment"
+                  },
+                  {
+                    "parameterName": "market_segment",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0262931f0189afe5b35c35a23a_market_segment"
+                  },
+                  {
+                    "parameterName": "market_segment",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce025a0d1ac190b3f8ec9867c4e6_market_segment"
+                  },
+                  {
+                    "parameterName": "market_segment",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce0276591ebc900c92da1263665e_market_segment"
+                  },
+                  {
+                    "parameterName": "market_segment",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce027ee514e09fbd4368539862e5_market_segment"
+                  },
+                  {
+                    "parameterName": "market_segment",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02c2da138ebcd0218f8214524d_market_segment"
+                  },
+                  {
+                    "parameterName": "market_segment",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce029ce518efb09b40cdeb23fb76_market_segment"
+                  },
+                  {
+                    "parameterName": "market_segment",
+                    "queryName": "parameter_dashboards/01f1cdfbcc6a1b5f995ba1b26f0b14b8/datasets/01f1ce02ca9f152e84b02c013a9ab3b0_market_segment"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  },
+  "bookmarks": [
+    {
+      "name": "207a1e49",
+      "displayName": "Filter Verification Test",
+      "widgetSelections": [
+        {
+          "pageName": "global_filters",
+          "widgetName": "order_date_filter",
+          "selectionJson": "{\"kind\":\"operator\",\"operator\":\"and\",\"args\":[]}"
+        },
+        {
+          "pageName": "global_filters",
+          "widgetName": "region_filter",
+          "selectionJson": "{\"kind\":\"values\",\"dataType\":\"string\",\"values\":[\"AMERICA\"]}"
+        },
+        {
+          "pageName": "global_filters",
+          "widgetName": "segment_filter",
+          "selectionJson": "{\"kind\":\"values\",\"dataType\":\"string\",\"values\":[\"FURNITURE\"]}"
+        }
+      ]
+    },
+    {
+      "name": "94cd5259",
+      "displayName": "All Data (Default)",
+      "widgetSelections": [
+        {
+          "pageName": "global_filters",
+          "widgetName": "order_date_filter",
+          "selectionJson": "{\"kind\":\"operator\",\"operator\":\"and\",\"args\":[]}"
+        },
+        {
+          "pageName": "global_filters",
+          "widgetName": "region_filter",
+          "selectionJson": "{\"kind\":\"operator\",\"operator\":\"and\",\"args\":[]}"
+        },
+        {
+          "pageName": "global_filters",
+          "widgetName": "segment_filter",
+          "selectionJson": "{\"kind\":\"operator\",\"operator\":\"and\",\"args\":[]}"
+        }
+      ]
+    }
+  ]
+}
